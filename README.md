@@ -16,7 +16,8 @@ Compile:
 Before compiling, make sure **nvcc** in **$PATH** and CUDA libraries in **$LD_LIBRARY_PATH**
 
     nvcc -c yourfile.cu -I src
-    nvcc yourfile.o OptimalKernelLaunch.o
+    nvcc -c src/OptimalKernelLaunch.cu -o lib/OptimalKernelLaunch.o -I src
+    nvcc yourfile.o lib/OptimalKernelLaunch.o
 
 Test sample code:
 -----------------
