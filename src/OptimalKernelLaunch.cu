@@ -4,6 +4,10 @@
 //#include"functions.cpp"
 #ifdef  KERNEL_OPT_FNS
 
+int floor(int a, int b) {
+    return floor(float(a) / b) * b;
+}
+
 int ceil(int a, int b) {
     return ceil(float(a) / b) * b;
 }
@@ -12,14 +16,31 @@ int ceil(int a, int b) {
 int RegistersPerBlock(struct Kernel_parameters& input, struct Physical_Limits& config) {
 	int WarpsPerBlock = ceil( float(input.threadsPerBlock) / config.threadsPerWarp);
 	if (strcmp(config.allocationGranularity,"block") == 0)
-		return ceil( ceil(WarpsPerBlock, config.warpAllocationGranularity) * input.registersPerThread * config.threadsPerWarp, config.registerAllocationUnitSize);
-	else
-		return ceil(input.registersPerThread * config.threadsPerWarp, config.registerAllocationUnitSize) * WarpsPerBlock;
+		return ceil( ceil(WarpsPerBlock, config.warpAllocationGranularity) * 
+			input.registersPerThread * config.threadsPerWarp, config.registerAllocationUnitSize);
+	else{
+		int RegistersPerWarp = ceil(input.registersPerThread * config.threadsPerWarp, config.registerAllocationUnitSize);
+		return RegistersPerWarp * WarpsPerBlock;
+		//Above is correct, xls is wrong)
+	}
+}
+
+int RegistersPerSM(struct Kernel_parameters& input, struct Physical_Limits& config) {
+	if (strcmp(config.allocationGranularity,"block") == 0)
+		return config.registerFileSize;
+	else{
+		int RegistersPerWarp = ceil(input.registersPerThread * config.threadsPerWarp, config.registerAllocationUnitSize);
+		return floor( config.registerFileSize / RegistersPerWarp, config.warpAllocationGranularity) * RegistersPerWarp;
+		//Above is correct, xls is wrong)
+	}
 }
 
 int Blocks_limitbyRegisters(struct Kernel_parameters& input, struct Physical_Limits& config) {
-	if (input.registersPerThread>0){
-		return floor(float(config.registerFileSize) / RegistersPerBlock(input, config));
+	if (input.registersPerThread > config.MaxRegistersPerThread){
+		return 0;
+	}
+	else if (input.registersPerThread > 0){
+		return floor(float( RegistersPerSM(input, config)) / RegistersPerBlock(input, config));
 	}
 	else
 		return config.threadBlocksPerMultiprocessor;
