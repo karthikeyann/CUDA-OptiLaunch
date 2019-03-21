@@ -1,7 +1,7 @@
 # ------------------------------------------------
 # Makefile
 #
-# Author: lxkarthi@gmail.com
+# Author: Karthikeyan Natarajan github.com/karthikeyann
 # Date  : 2014-03-29
 #
 # ------------------------------------------------
